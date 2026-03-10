@@ -8,7 +8,7 @@ API_KEY = os.getenv("RAPIDAPI_KEY")
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    await update.message.reply_text("Checking GST numbers...")
+    await update.message.reply_text("Processing GST numbers...")
 
     file = await update.message.document.get_file()
     await file.download_to_drive("gst.txt")
@@ -33,8 +33,43 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if data.get("success"):
 
-                info = data.get("data", {})
-                last_update = info.get("lastUpdateDate")
+                info = data["data"]
+
+                name = info.get("tradeName","NA")
+                status = info.get("status","NA")
+                regdate = info.get("registrationDate","NA")
+
+                results.append(f"{gstin} | {name} | {status} | {regdate}")
+
+            else:
+
+                results.append(f"{gstin} | No Data")
+
+        except Exception as e:
+
+            results.append(f"{gstin} | Error")
+
+    with open("result.txt","w") as f:
+
+        f.write("GSTIN | Business Name | Status | Registration Date\n\n")
+
+        for line in results:
+            f.write(line + "\n")
+
+    with open("result.txt","rb") as f:
+        await update.message.reply_document(document=f)
+
+app = (
+    ApplicationBuilder()
+    .token(BOT_TOKEN)
+    .read_timeout(60)
+    .connect_timeout(60)
+    .build()
+)
+
+app.add_handler(MessageHandler(filters.Document.ALL, check))
+
+app.run_polling()                last_update = info.get("lastUpdateDate")
 
                 if last_update:
                     results.append(gstin)
