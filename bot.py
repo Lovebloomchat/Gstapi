@@ -13,27 +13,35 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     gst_list = open("gst.txt").read().splitlines()
 
-    result = []
+    results = []
 
     for gstin in gst_list:
 
-        url = f"https://gst-insights-api.p.rapidapi.com/getGSTDetailsUsingGST/{gstin}"
+        url = f"https://gst-return-status.p.rapidapi.com/free/gstin/{gstin}"
 
         headers = {
             "x-rapidapi-key": API_KEY,
-            "x-rapidapi-host": "gst-insights-api.p.rapidapi.com"
+            "x-rapidapi-host": "gst-return-status.p.rapidapi.com"
         }
 
         r = requests.get(url, headers=headers)
         data = r.json()
 
         if data["success"]:
-            result.append(gstin)
+
+            name = data["data"]["tradeName"]
+
+            returns = data["data"]["returns"][0]
+
+            month = returns["taxp"]
+            date = returns["dof"]
+
+            results.append(f"{gstin} | {month} | {date}")
 
     with open("result.txt","w") as f:
 
-        for g in result:
-            f.write(g + "\n")
+        for line in results:
+            f.write(line + "\n")
 
     await update.message.reply_document(open("result.txt","rb"))
 
