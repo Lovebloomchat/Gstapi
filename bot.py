@@ -31,12 +31,20 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             name = data["data"]["tradeName"]
 
-            returns = data["data"]["returns"][0]
+            returns = data["data"].get("returns", [])
 
-            month = returns["taxp"]
-            date = returns["dof"]
+            if len(returns) > 0:
 
-            results.append(f"{gstin} | {month} | {date}")
+                latest = returns[0]
+
+                month = latest.get("taxp", "NA")
+                date = latest.get("dof", "NA")
+
+                results.append(f"{gstin} | {month} | {date}")
+
+            else:
+
+                results.append(f"{gstin} | No return data")
 
     with open("result.txt","w") as f:
 
